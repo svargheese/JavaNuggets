@@ -1,4 +1,4 @@
-package com.javanuggets.datasharer;
+package com.svargheese.jnuggets;
 
 import java.io.IOException;
 
@@ -12,7 +12,12 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class WifiDataSharer extends AbstractHandler {
 
-	private static StringBuilder data = new StringBuilder("data");
+	private static final StringBuilder DATA = new StringBuilder("data");
+	private static final String HTML_CONTENT = "<h1>Copy or Paste to share.</h1>"
+			+ "\n<form method='POST'>"
+			+ "\n<textarea id='data' name='data' onClick='this.setSelectionRange(0, this.value.length);' rows='4' cols='50'>%s</textarea>"
+			+ "\n<br><input name='write' type='submit' value='Write'/>"
+			+ "\n</form>";
 
 	public WifiDataSharer() {
 
@@ -28,28 +33,21 @@ public class WifiDataSharer extends AbstractHandler {
 		boolean isWrite = "Write".equalsIgnoreCase((String) baseRequest
 				.getParameter("write"));
 
-		if (isWrite && data != null) {
+		if (isWrite && data != null) {// Update
 
 			System.out.println(String.format("Older data %s incoming data %s",
-					WifiDataSharer.data == null ? "null" : WifiDataSharer.data,
+					WifiDataSharer.DATA == null ? "null" : WifiDataSharer.DATA,
 					data));
-			WifiDataSharer.data.delete(0, WifiDataSharer.data.length());
-			WifiDataSharer.data.append(data);
+			DATA.delete(0, WifiDataSharer.DATA.length());
+			DATA.append(data);
 			r.sendRedirect("/");
-		}
+		} else { // Read
 
-		r.setContentType("text/html;charset=utf-8");
-		r.getWriter().println("<h1>Copy or Paste to share.</h1>");
-		r.getWriter().println("<form method='POST'>");
-		r.getWriter()
-				.println(
-						"<input id='data' name='data' onClick='this.setSelectionRange(0, this.value.length);' type='textarea' value='"
-								+ WifiDataSharer.data + "'/>");
-		r.getWriter().println(
-				"<input name='write' type='submit' value='Write'/>");
-		r.getWriter().println("</form>");
-		r.setStatus(HttpServletResponse.SC_FOUND);
-		baseRequest.setHandled(true);
+			r.setContentType("text/html;charset=utf-8");
+			r.getWriter().println(String.format(HTML_CONTENT, DATA));
+			r.setStatus(HttpServletResponse.SC_FOUND);
+			baseRequest.setHandled(true);
+		}
 	}
 
 	public static void main(String[] args) {
@@ -58,7 +56,6 @@ public class WifiDataSharer extends AbstractHandler {
 
 			Server server = new Server(8080);
 			server.setHandler(new WifiDataSharer());
-
 			server.start();
 			server.join();
 		} catch (Exception e) {
